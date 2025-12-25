@@ -108,12 +108,12 @@ export default function Admin() {
     const tempId = `uploading-${Date.now()}`;
     setUploadingPhotos(prev => [...prev, tempId]);
 
-    const toastId = toast.loading('Preparing photo...');
+    const toastId = toast.loading('Préparation de la photo...');
 
     try {
       const prepared = await preparePhotoForUpload(file);
 
-      toast.loading('Uploading photo...', { id: toastId });
+      toast.loading('Téléchargement de la photo...', { id: toastId });
 
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${prepared.extension}`;
       const filePath = `artifacts/${fileName}`;
@@ -135,10 +135,10 @@ export default function Admin() {
         photos: [...prev.photos, publicUrl],
       }));
 
-      toast.success('Photo uploaded!', { id: toastId });
+      toast.success('Photo téléchargée !', { id: toastId });
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error?.message || 'Failed to upload photo', { id: toastId });
+      toast.error(error?.message || 'Échec du téléchargement de la photo', { id: toastId });
     } finally {
       setUploadingPhotos(prev => prev.filter(id => id !== tempId));
     }
@@ -153,7 +153,7 @@ export default function Admin() {
 
   const analyzeWithAI = async () => {
     if (form.photos.length === 0) {
-      toast.error('Please upload at least one photo first');
+      toast.error("Veuillez d'abord télécharger au moins une photo");
       return;
     }
 
@@ -172,10 +172,10 @@ export default function Admin() {
         description: data.description || prev.description,
       }));
 
-      toast.success('AI analysis complete!');
+      toast.success('Analyse IA terminée !');
     } catch (error) {
       console.error('AI analysis error:', error);
-      toast.error('Failed to analyze artifact. Try again.');
+      toast.error("Échec de l'analyse de l'artefact. Réessayez.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -183,7 +183,7 @@ export default function Admin() {
 
   const saveArtifact = async () => {
     if (!form.name.trim()) {
-      toast.error('Please enter a name for the artifact');
+      toast.error("Veuillez entrer un nom pour l'artefact");
       return;
     }
 
@@ -191,18 +191,18 @@ export default function Admin() {
     try {
       const { error } = await supabase.from('artifacts').insert({
         name: form.name,
-        date: form.date || 'Unknown date',
-        description: form.description || 'No description available.',
+        date: form.date || 'Date inconnue',
+        description: form.description || 'Aucune description disponible.',
         photos: form.photos,
       });
 
       if (error) throw error;
 
-      toast.success('Artifact saved successfully!');
+      toast.success('Artefact enregistré avec succès !');
       setForm({ name: '', date: '', description: '', photos: [] });
     } catch (error) {
       console.error('Save error:', error);
-      toast.error('Failed to save artifact');
+      toast.error("Échec de l'enregistrement de l'artefact");
     } finally {
       setIsSaving(false);
     }
@@ -220,9 +220,9 @@ export default function Admin() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+            Retour
           </Button>
-          <h1 className="font-display text-lg font-semibold text-foreground">Add Artifact</h1>
+          <h1 className="font-display text-lg font-semibold text-foreground">Ajouter un artefact</h1>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="w-4 h-4" />
           </Button>
@@ -239,7 +239,7 @@ export default function Admin() {
             <CameraCaptureDialog onCapture={uploadPhoto} disabled={uploadingPhotos.length > 0} />
             <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
               <Upload className="w-4 h-4 mr-2" />
-              Upload
+              Télécharger
             </Button>
           </div>
 
@@ -297,12 +297,12 @@ export default function Admin() {
               {isAnalyzing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing...
+                  Analyse en cours...
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Auto-fill with AI
+                  Remplir avec l'IA
                 </>
               )}
             </Button>
@@ -312,11 +312,11 @@ export default function Admin() {
         {/* Form Fields */}
         <section className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1">Name</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Nom</label>
             <Input
               value={form.name}
               onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g., Berliner Gramophone"
+              placeholder="ex. Gramophone Berliner"
             />
           </div>
 
@@ -325,7 +325,7 @@ export default function Admin() {
             <Input
               value={form.date}
               onChange={(e) => setForm(prev => ({ ...prev, date: e.target.value }))}
-              placeholder="e.g., 1895 or circa 1920"
+              placeholder="ex. 1895 ou vers 1920"
             />
           </div>
 
@@ -334,7 +334,7 @@ export default function Admin() {
             <Textarea
               value={form.description}
               onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Describe the artifact, its history, and significance..."
+              placeholder="Décrivez l'artefact, son histoire et son importance..."
               rows={4}
             />
           </div>
@@ -351,12 +351,12 @@ export default function Admin() {
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
+                Enregistrement...
               </>
             ) : (
               <>
                 <Save className="w-4 h-4 mr-2" />
-                Save Artifact
+                Enregistrer l'artefact
               </>
             )}
           </Button>

@@ -26,7 +26,7 @@ const Header = () => {
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/60 backdrop-blur-md border border-border/40">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-glow" />
             <span className="text-[10px] font-body text-muted-foreground uppercase tracking-widest">
-              Live
+              En direct
             </span>
           </div>
 
