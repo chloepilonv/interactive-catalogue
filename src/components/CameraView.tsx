@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, AlertCircle, Scan } from "lucide-react";
+import { Camera, AlertCircle, Scan, RefreshCw } from "lucide-react";
 import DetectionMarker from "./DetectionMarker";
 import ArtifactCard from "./ArtifactCard";
-import { artifacts, Artifact } from "@/data/artifacts";
+import { useArtifacts, Artifact } from "@/hooks/useArtifacts";
 
 interface Detection {
   id: string;
@@ -22,6 +22,9 @@ const CameraView = () => {
   const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // Fetch artifacts from Google Sheets
+  const { data: artifacts = [], isLoading: isLoadingArtifacts, refetch } = useArtifacts();
 
   // Initialize camera
   useEffect(() => {
@@ -58,24 +61,25 @@ const CameraView = () => {
     };
   }, []);
 
-  // Simulate object detection (in real app, this would use ML/AI)
+  // Simulate object detection
   const simulateDetection = () => {
+    if (artifacts.length === 0) return;
+    
     setIsScanning(true);
     setDetections([]);
 
-    // Simulate scanning delay
     setTimeout(() => {
-      // Generate 1-3 random detections
-      const numDetections = Math.floor(Math.random() * 3) + 1;
+      // Generate 1-3 random detections from available artifacts
+      const numDetections = Math.min(Math.floor(Math.random() * 3) + 1, artifacts.length);
+      const shuffled = [...artifacts].sort(() => Math.random() - 0.5);
       const newDetections: Detection[] = [];
 
       for (let i = 0; i < numDetections; i++) {
-        const randomArtifact = artifacts[Math.floor(Math.random() * artifacts.length)];
         newDetections.push({
           id: `detection-${Date.now()}-${i}`,
-          x: 20 + Math.random() * 60, // Keep within center area
+          x: 20 + Math.random() * 60,
           y: 20 + Math.random() * 60,
-          artifact: randomArtifact
+          artifact: shuffled[i]
         });
       }
 
@@ -92,6 +96,11 @@ const CameraView = () => {
   const handleCloseCard = () => {
     setIsCardOpen(false);
     setTimeout(() => setSelectedArtifact(null), 300);
+  };
+
+  const handleRefresh = () => {
+    refetch();
+    setDetections([]);
   };
 
   return (
@@ -134,7 +143,6 @@ const CameraView = () => {
             exit={{ opacity: 0 }}
             className="absolute inset-0 pointer-events-none z-10"
           >
-            {/* Scan line animation */}
             <motion.div
               initial={{ top: "0%" }}
               animate={{ top: "100%" }}
@@ -142,7 +150,6 @@ const CameraView = () => {
               className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent shadow-gold"
             />
             
-            {/* Corner brackets */}
             <div className="absolute inset-8 border-2 border-primary/30 rounded-lg">
               <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary rounded-tl-lg" />
               <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary rounded-tr-lg" />
@@ -150,7 +157,6 @@ const CameraView = () => {
               <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary rounded-br-lg" />
             </div>
 
-            {/* Scanning text */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
               <motion.p
                 animate={{ opacity: [0.5, 1, 0.5] }}
@@ -186,12 +192,32 @@ const CameraView = () => {
       {/* Bottom gradient for controls */}
       <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-charcoal-deep/90 to-transparent pointer-events-none" />
 
+      {/* Collection info badge */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="absolute top-20 left-4 z-30"
+      >
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/80 backdrop-blur-sm border border-border/50">
+          <span className="text-xs font-body text-muted-foreground">
+            {isLoadingArtifacts ? 'Loading...' : `${artifacts.length} artifacts`}
+          </span>
+          <button
+            onClick={handleRefresh}
+            className="p-1 hover:bg-secondary rounded-full transition-colors"
+            aria-label="Refresh collection"
+          >
+            <RefreshCw className="w-3 h-3 text-muted-foreground" />
+          </button>
+        </div>
+      </motion.div>
+
       {/* Scan button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={simulateDetection}
-        disabled={isScanning}
+        disabled={isScanning || artifacts.length === 0}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-body font-medium shadow-gold disabled:opacity-50 disabled:cursor-not-allowed safe-bottom"
       >
         {isScanning ? (
@@ -219,9 +245,12 @@ const CameraView = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute bottom-24 left-1/2 -translate-x-1/2 text-center text-sm text-foreground/70 font-body z-20"
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 text-center text-sm text-foreground/70 font-body z-20 max-w-[280px]"
           >
-            Point camera at a museum object and tap Scan
+            {artifacts.length === 0 
+              ? "No artifacts in collection. Add items to your Google Sheet."
+              : "Point camera at a museum object and tap Scan"
+            }
           </motion.p>
         )}
       </AnimatePresence>
