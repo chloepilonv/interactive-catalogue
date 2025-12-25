@@ -42,18 +42,54 @@ export default function Admin() {
     }
   };
 
+  // Compress image before upload
+  const compressImage = async (file: File, maxWidth = 1200): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Only resize if larger than maxWidth
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob(
+          (blob) => resolve(blob || file),
+          'image/jpeg',
+          0.85 // Quality 85%
+        );
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const uploadPhoto = async (file: File) => {
     const tempId = `uploading-${Date.now()}`;
     setUploadingPhotos(prev => [...prev, tempId]);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      // Compress image first
+      toast.info('Compressing image...');
+      const compressedBlob = await compressImage(file);
+      
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
       const filePath = `artifacts/${fileName}`;
 
+      toast.info('Uploading...');
       const { error: uploadError } = await supabase.storage
         .from('artifacts')
-        .upload(filePath, file);
+        .upload(filePath, compressedBlob, {
+          contentType: 'image/jpeg',
+        });
 
       if (uploadError) throw uploadError;
 
