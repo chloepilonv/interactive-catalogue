@@ -39,7 +39,7 @@ const Home = () => {
           transition={{ delay: 0.4, duration: 0.6 }}
           className="text-muted-foreground font-body text-sm md:text-base tracking-widest uppercase mb-12 text-center"
         >
-          Interactive Collection Experience
+          Expérience interactive de la collection
         </motion.p>
 
         {/* Scan Button */}
@@ -71,7 +71,7 @@ const Home = () => {
 
       {/* Hidden SEO content */}
       <h1 className="sr-only">
-        Musée des Ondes Emile Berliner - Interactive Collection Viewer
+        Musée des Ondes Emile Berliner - Visualiseur interactif de la collection
       </h1>
     </main>
   );

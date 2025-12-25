@@ -73,7 +73,7 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
                       <div className="w-16 h-16 mx-auto mb-3 rounded-full border border-border flex items-center justify-center">
                         <ImageIcon className="w-6 h-6 text-muted-foreground" />
                       </div>
-                      <p className="text-xs text-muted-foreground font-body tracking-wide">No image available</p>
+                      <p className="text-xs text-muted-foreground font-body tracking-wide">Aucune image disponible</p>
                     </div>
                   </div>
                 )}
@@ -140,7 +140,7 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
                   className="mt-8"
                 >
                   <h3 className="text-[10px] font-body font-medium text-muted-foreground uppercase tracking-[0.2em] mb-4">
-                    Gallery
+                    Galerie
                   </h3>
                   <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2">
                     {artifact.photos.slice(1).map((photo, index) => (

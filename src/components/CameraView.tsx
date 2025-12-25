@@ -108,12 +108,12 @@ const CameraView = () => {
       const name = typeof error?.name === "string" ? error.name : undefined;
       const message = typeof error?.message === "string" ? error.message : undefined;
 
-      let friendly = "Unable to access camera.";
-      if (name === "NotAllowedError") friendly = "Camera access was blocked. Please allow camera permissions for this site.";
-      else if (name === "NotFoundError") friendly = "No camera device was found.";
-      else if (name === "NotReadableError") friendly = "Camera is already in use by another app or tab.";
-      else if (name === "SecurityError") friendly = "Camera access is blocked by browser security settings.";
-      else if (name === "OverconstrainedError") friendly = "This device can't use the requested camera settings.";
+      let friendly = "Impossible d'accéder à la caméra.";
+      if (name === "NotAllowedError") friendly = "L'accès à la caméra a été bloqué. Veuillez autoriser les permissions caméra pour ce site.";
+      else if (name === "NotFoundError") friendly = "Aucune caméra détectée.";
+      else if (name === "NotReadableError") friendly = "La caméra est déjà utilisée par une autre application ou onglet.";
+      else if (name === "SecurityError") friendly = "L'accès à la caméra est bloqué par les paramètres de sécurité du navigateur.";
+      else if (name === "OverconstrainedError") friendly = "Cet appareil ne peut pas utiliser les paramètres de caméra demandés.";
 
       setCameraError(friendly);
       setCameraErrorDetail([name, message].filter(Boolean).join(": ") || null);
@@ -129,7 +129,7 @@ const CameraView = () => {
   const captureAndAnalyze = async () => {
     const video = videoRef.current;
     if (!video || video.videoWidth === 0) {
-      toast({ title: "Camera not ready", description: "Please wait for the camera to initialize.", variant: "destructive" });
+      toast({ title: "Caméra non prête", description: "Veuillez patienter pendant l'initialisation de la caméra.", variant: "destructive" });
       return;
     }
 
@@ -172,14 +172,14 @@ const CameraView = () => {
       }]);
 
       const toastMessage = data.fromDatabase 
-        ? `Found in collection: ${detectedArtifact.name}` 
+        ? `Trouvé dans la collection : ${detectedArtifact.name}` 
         : detectedArtifact.name;
-      toast({ title: "Object identified!", description: toastMessage });
+      toast({ title: "Objet identifié !", description: toastMessage });
     } catch (err: any) {
       console.error("Analysis error:", err);
       toast({
-        title: "Analysis failed",
-        description: err?.message || "Could not analyze the image. Please try again.",
+        title: "Échec de l'analyse",
+        description: err?.message || "Impossible d'analyser l'image. Veuillez réessayer.",
         variant: "destructive"
       });
     } finally {
@@ -225,7 +225,7 @@ const CameraView = () => {
             className="w-10 h-10 border border-primary/40 border-t-primary rounded-full mb-6"
           />
           <p className="text-muted-foreground font-body text-sm tracking-widest uppercase">
-            Initializing camera...
+            Initialisation de la caméra...
           </p>
         </div>
       )}
@@ -248,7 +248,7 @@ const CameraView = () => {
               onClick={startCamera}
               className="bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 font-body"
             >
-              Try again
+              Réessayer
             </Button>
             <Button
               type="button"
@@ -257,7 +257,7 @@ const CameraView = () => {
               className="text-muted-foreground hover:text-foreground font-body"
             >
               <ExternalLink className="mr-2 h-4 w-4" />
-              Open in new tab
+              Ouvrir dans un nouvel onglet
             </Button>
           </div>
         </div>
@@ -295,7 +295,7 @@ const CameraView = () => {
                 transition={{ duration: 2, repeat: Infinity }}
                 className="text-primary font-body text-xs uppercase tracking-[0.3em]"
               >
-                Analyzing
+                Analyse en cours
               </motion.p>
             </div>
           </motion.div>
@@ -344,12 +344,12 @@ const CameraView = () => {
                 transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                 className="w-4 h-4 border border-primary/40 border-t-primary rounded-full"
               />
-              <span>Analyzing...</span>
+              <span>Analyse en cours...</span>
             </>
           ) : (
             <>
               <Camera className="w-4 h-4" />
-              <span>Scan Object</span>
+              <span>Scanner l'objet</span>
             </>
           )}
         </motion.button>
@@ -365,7 +365,7 @@ const CameraView = () => {
             transition={{ delay: 0.8 }}
             className="absolute bottom-28 inset-x-0 text-center text-xs text-muted-foreground font-body z-20 tracking-wide px-4"
           >
-            Point your camera at a museum artifact
+            Pointez votre caméra vers un artefact du musée
           </motion.p>
         )}
       </AnimatePresence>
