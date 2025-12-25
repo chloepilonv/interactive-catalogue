@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Upload, Sparkles, Save, ArrowLeft, Trash2, Loader2, LogOut, X, Plus } from 'lucide-react';
+import { Sparkles, Save, ArrowLeft, Loader2, LogOut, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { CameraCaptureDialog } from '@/components/CameraCaptureDialog';
 
 interface ArtifactForm {
   name: string;
@@ -32,63 +33,95 @@ export default function Admin() {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    for (const file of Array.from(files)) {
-      await uploadPhoto(file);
-    }
-    
+    await Promise.all(Array.from(files).map((file) => uploadPhoto(file)));
+
     // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  // Compress image before upload
-  const compressImage = async (file: File, maxWidth = 1200): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+  const preparePhotoForUpload = async (file: File, maxWidth = 1280) => {
+    const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
 
-        // Only resize if larger than maxWidth
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
+    const quality = 0.78;
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        
+    const compressBitmap = async (bitmap: ImageBitmap): Promise<Blob> => {
+      const scale = bitmap.width > maxWidth ? maxWidth / bitmap.width : 1;
+      const width = Math.max(1, Math.round(bitmap.width * scale));
+      const height = Math.max(1, Math.round(bitmap.height * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+
+      ctx.drawImage(bitmap, 0, 0, width, height);
+
+      return await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(
-          (blob) => resolve(blob || file),
+          (b) => (b ? resolve(b) : reject(new Error('Compression failed'))),
           'image/jpeg',
-          0.85 // Quality 85%
+          quality,
         );
-      };
-      img.src = URL.createObjectURL(file);
-    });
+      });
+    };
+
+    // Try native decode/compress first
+    try {
+      if (typeof createImageBitmap === 'function') {
+        const bitmap = await createImageBitmap(file);
+        try {
+          const blob = await compressBitmap(bitmap);
+          return { blob, contentType: 'image/jpeg', extension: 'jpg' };
+        } finally {
+          bitmap.close?.();
+        }
+      }
+    } catch (e) {
+      // fall through
+    }
+
+    // If it's HEIC/HEIF and native decode failed, try converting it (fixes "never uploads" on desktop Chrome)
+    if (isHeic) {
+      try {
+        const heic2any = (await import('heic2any')).default;
+        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality });
+        const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
+        return { blob: convertedBlob as Blob, contentType: 'image/jpeg', extension: 'jpg' };
+      } catch (e) {
+        console.warn('HEIC conversion failed, uploading original file:', e);
+      }
+    }
+
+    // Fallback: upload as-is (never block the upload)
+    const fallbackExt = file.name.split('.').pop() || 'bin';
+    return {
+      blob: file,
+      contentType: file.type || 'application/octet-stream',
+      extension: fallbackExt,
+    };
   };
 
   const uploadPhoto = async (file: File) => {
     const tempId = `uploading-${Date.now()}`;
     setUploadingPhotos(prev => [...prev, tempId]);
 
+    const toastId = toast.loading('Preparing photo...');
+
     try {
-      // Compress image first
-      toast.info('Compressing image...');
-      const compressedBlob = await compressImage(file);
-      
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+      const prepared = await preparePhotoForUpload(file);
+
+      toast.loading('Uploading photo...', { id: toastId });
+
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${prepared.extension}`;
       const filePath = `artifacts/${fileName}`;
 
-      toast.info('Uploading...');
       const { error: uploadError } = await supabase.storage
         .from('artifacts')
-        .upload(filePath, compressedBlob, {
-          contentType: 'image/jpeg',
+        .upload(filePath, prepared.blob, {
+          contentType: prepared.contentType,
         });
 
       if (uploadError) throw uploadError;
@@ -102,10 +135,10 @@ export default function Admin() {
         photos: [...prev.photos, publicUrl],
       }));
 
-      toast.success('Photo uploaded!');
-    } catch (error) {
+      toast.success('Photo uploaded!', { id: toastId });
+    } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload photo');
+      toast.error(error?.message || 'Failed to upload photo', { id: toastId });
     } finally {
       setUploadingPhotos(prev => prev.filter(id => id !== tempId));
     }
