@@ -152,10 +152,9 @@ const CameraView = () => {
 
       if (error) throw error;
 
-      // Use database photo if found, otherwise use captured frame
-      const artifactPhotos = data.photos?.length > 0 
-        ? data.photos 
-        : (data.imageUrl ? [data.imageUrl] : [imageDataUrl]);
+      // Only use a registry photo when the backend explicitly confirmed a database match
+      const artifactPhotos =
+        data?.fromDatabase && Array.isArray(data?.photos) && data.photos.length > 0 ? data.photos : [imageDataUrl];
       
       const detectedArtifact: Artifact = {
         id: data.id || `detected-${Date.now()}`,
