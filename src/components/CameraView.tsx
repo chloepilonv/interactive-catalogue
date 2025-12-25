@@ -88,27 +88,27 @@ const CameraView = () => {
 
       if (videoRef.current) {
         const videoEl = videoRef.current;
+
+        // Set these BEFORE assigning srcObject (matches working console test)
+        videoEl.muted = true;
+        videoEl.playsInline = true;
         videoEl.srcObject = stream;
 
-        // Ensure playback starts reliably across browsers
+        // Wait for loadedmetadata (like the working console script)
         await new Promise<void>((resolve) => {
-          const done = () => resolve();
-          videoEl.onloadedmetadata = done;
-          videoEl.oncanplay = done;
-          window.setTimeout(done, 1200);
+          videoEl.onloadedmetadata = () => resolve();
         });
 
-        try {
-          await videoEl.play();
-        } catch {
-          // ignore play() errors; some browsers require a user gesture
-        }
+        await videoEl.play();
 
-        // Watchdog: if we never get frames, show a helpful error (prevents silent black screen)
+        // Watchdog: if we never get frames, show a helpful error
         watchdogRef.current = window.setTimeout(() => {
           const v = videoRef.current;
           if (!v) return;
-          if (v.videoWidth > 0) return;
+          if (v.videoWidth > 0) {
+            setIsLoading(false);
+            return;
+          }
           stopCamera();
           setCameraError("Camera started but no video feed was received.");
           setCameraErrorDetail("Try 'Try again' or open in a new tab.");
