@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,70 +6,72 @@
 
 @layer base {
   :root {
-    /* Vintage Museum Palette */
-    --background: 20 10% 8%;
-    --foreground: 40 30% 92%;
+    /* Vintage Monochrome Palette - inspired by old records/gramophones */
+    --background: 0 0% 4%;
+    --foreground: 45 10% 90%;
 
-    --card: 20 12% 12%;
-    --card-foreground: 40 30% 92%;
+    --card: 0 0% 8%;
+    --card-foreground: 45 10% 90%;
 
-    --popover: 20 12% 10%;
-    --popover-foreground: 40 30% 92%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 45 10% 90%;
 
-    --primary: 43 60% 55%;
-    --primary-foreground: 20 10% 8%;
+    --primary: 40 35% 65%;
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 20 15% 18%;
-    --secondary-foreground: 40 25% 85%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 45 8% 80%;
 
-    --muted: 20 10% 15%;
-    --muted-foreground: 30 15% 55%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 40 5% 50%;
 
-    --accent: 35 50% 45%;
-    --accent-foreground: 40 30% 95%;
+    --accent: 35 25% 50%;
+    --accent-foreground: 45 10% 95%;
 
-    --destructive: 0 62% 50%;
+    --destructive: 0 55% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 30 15% 20%;
-    --input: 30 15% 20%;
-    --ring: 43 60% 55%;
+    --border: 40 8% 18%;
+    --input: 40 8% 18%;
+    --ring: 40 35% 65%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Custom Museum Colors */
-    --gold: 43 60% 55%;
-    --gold-light: 43 70% 70%;
-    --gold-dark: 43 50% 40%;
-    --sepia: 30 40% 35%;
-    --brass: 38 45% 50%;
-    --ivory: 40 35% 92%;
-    --charcoal: 20 10% 12%;
-    --charcoal-deep: 20 10% 6%;
+    /* Custom Museum Colors - warm antique tones */
+    --gold: 40 35% 65%;
+    --gold-light: 42 40% 75%;
+    --gold-dark: 38 30% 50%;
+    --sepia: 35 25% 30%;
+    --brass: 40 30% 55%;
+    --ivory: 45 20% 88%;
+    --cream: 40 25% 92%;
+    --charcoal: 0 0% 10%;
+    --charcoal-deep: 0 0% 4%;
 
     /* Gradients */
-    --gradient-gold: linear-gradient(135deg, hsl(43 60% 55%), hsl(38 50% 45%));
-    --gradient-dark: linear-gradient(180deg, hsl(20 10% 10%), hsl(20 10% 6%));
-    --gradient-card: linear-gradient(160deg, hsl(20 12% 14%), hsl(20 10% 10%));
-    --gradient-vintage: linear-gradient(135deg, hsl(30 30% 20%), hsl(20 15% 12%));
+    --gradient-gold: linear-gradient(135deg, hsl(40 35% 65%), hsl(35 25% 50%));
+    --gradient-dark: linear-gradient(180deg, hsl(0 0% 6%), hsl(0 0% 4%));
+    --gradient-card: linear-gradient(160deg, hsl(0 0% 10%), hsl(0 0% 6%));
+    --gradient-vintage: linear-gradient(135deg, hsl(30 15% 12%), hsl(0 0% 8%));
 
     /* Shadows */
-    --shadow-gold: 0 0 30px hsl(43 60% 55% / 0.15);
-    --shadow-card: 0 10px 40px hsl(0 0% 0% / 0.4);
-    --shadow-soft: 0 4px 20px hsl(0 0% 0% / 0.3);
+    --shadow-gold: 0 0 40px hsl(40 35% 65% / 0.12);
+    --shadow-card: 0 20px 60px hsl(0 0% 0% / 0.5);
+    --shadow-soft: 0 8px 30px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 60px hsl(40 35% 65% / 0.1);
 
     /* Animations */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    --sidebar-background: 20 10% 10%;
-    --sidebar-foreground: 40 30% 92%;
-    --sidebar-primary: 43 60% 55%;
-    --sidebar-primary-foreground: 20 10% 8%;
-    --sidebar-accent: 20 12% 18%;
-    --sidebar-accent-foreground: 40 30% 92%;
-    --sidebar-border: 30 15% 18%;
-    --sidebar-ring: 43 60% 55%;
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 45 10% 90%;
+    --sidebar-primary: 40 35% 65%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 45 10% 90%;
+    --sidebar-border: 40 8% 16%;
+    --sidebar-ring: 40 35% 65%;
   }
 }
 
@@ -80,25 +82,28 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    letter-spacing: 0.02em;
   }
 }
 
 @layer utilities {
   .font-display {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
   }
 
   .font-body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Outfit', sans-serif;
   }
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, hsl(43 60% 55%), hsl(43 70% 70%));
+    background: linear-gradient(135deg, hsl(40 35% 65%), hsl(42 40% 75%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -128,6 +133,10 @@
     box-shadow: var(--shadow-card);
   }
 
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
   .border-gold {
     border-color: hsl(var(--gold));
   }
@@ -140,17 +149,22 @@
     color: hsl(var(--ivory));
   }
 
-  /* Vintage texture overlay */
-  .texture-noise::before {
+  .text-cream {
+    color: hsl(var(--cream));
+  }
+
+  /* Film grain texture overlay */
+  .texture-grain::before {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.04;
     pointer-events: none;
+    mix-blend-mode: overlay;
   }
 
-  /* Scan line effect */
+  /* Vintage scan line effect */
   .scan-lines::after {
     content: '';
     position: absolute;
@@ -158,9 +172,9 @@
     background: repeating-linear-gradient(
       0deg,
       transparent,
-      transparent 2px,
-      hsl(0 0% 0% / 0.03) 2px,
-      hsl(0 0% 0% / 0.03) 4px
+      transparent 1px,
+      hsl(0 0% 100% / 0.01) 1px,
+      hsl(0 0% 100% / 0.01) 2px
     );
     pointer-events: none;
   }
@@ -168,24 +182,55 @@
   /* Pulse animation for detection markers */
   @keyframes pulse-gold {
     0%, 100% {
-      box-shadow: 0 0 0 0 hsl(43 60% 55% / 0.4);
+      box-shadow: 0 0 0 0 hsl(40 35% 65% / 0.5);
     }
     50% {
-      box-shadow: 0 0 0 12px hsl(43 60% 55% / 0);
+      box-shadow: 0 0 0 16px hsl(40 35% 65% / 0);
     }
   }
 
   .animate-pulse-gold {
-    animation: pulse-gold 2s ease-in-out infinite;
+    animation: pulse-gold 2.5s ease-in-out infinite;
   }
 
   @keyframes float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+    50% { transform: translateY(-6px); }
   }
 
   .animate-float {
-    animation: float 3s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--gold) / 0) 0%,
+      hsl(var(--gold) / 0.3) 50%,
+      hsl(var(--gold) / 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Elegant underline effect */
+  .underline-gold {
+    position: relative;
+  }
+
+  .underline-gold::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, hsl(var(--gold)) 0%, transparent 100%);
   }
 
   /* Safe area insets for mobile */
@@ -195,5 +240,11 @@
 
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Vintage border style */
+  .border-vintage {
+    border: 1px solid hsl(var(--border));
+    box-shadow: inset 0 0 0 1px hsl(var(--gold) / 0.1);
   }
 }
