@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, AlertCircle, Scan, RefreshCw } from "lucide-react";
+import { Camera, AlertCircle, Scan, RefreshCw, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import DetectionMarker from "./DetectionMarker";
 import ArtifactCard from "./ArtifactCard";
 import { useArtifacts, Artifact } from "@/hooks/useArtifacts";
@@ -13,53 +14,106 @@ interface Detection {
 }
 
 const CameraView = () => {
-  const [hasCamera, setHasCamera] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraErrorDetail, setCameraErrorDetail] = useState<string | null>(null);
   const [detections, setDetections] = useState<Detection[]>([]);
   const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
   const [isCardOpen, setIsCardOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+
+  const isEmbedded = (() => {
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
+  })();
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   // Fetch artifacts from Google Sheets
   const { data: artifacts = [], isLoading: isLoadingArtifacts, refetch } = useArtifacts();
 
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    setIsLoading(true);
+    setCameraError(null);
+    setCameraErrorDetail(null);
+    stopCamera();
+
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera not supported on this device/browser.");
+      }
+
+      const preferredConstraints: MediaStreamConstraints = {
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+        audio: false,
+      };
+
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(preferredConstraints);
+      } catch (e: any) {
+        // Some browsers/devices fail when asking for the environment camera; fallback to any camera.
+        if (e?.name === "OverconstrainedError") {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        } else {
+          throw e;
+        }
+      }
+
+      streamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        try {
+          await videoRef.current.play();
+        } catch {
+          // ignore play() errors; autoPlay/playsInline should handle most cases
+        }
+      }
+
+      setIsLoading(false);
+    } catch (error: any) {
+      console.error("Camera error:", error);
+
+      const name = typeof error?.name === "string" ? error.name : undefined;
+      const message = typeof error?.message === "string" ? error.message : undefined;
+
+      let friendly = "Unable to access camera.";
+      if (name === "NotAllowedError") friendly = "Camera access was blocked. Please allow camera permissions for this site.";
+      else if (name === "NotFoundError") friendly = "No camera device was found.";
+      else if (name === "NotReadableError") friendly = "Camera is already in use by another app or tab.";
+      else if (name === "SecurityError") friendly = "Camera access is blocked by browser security settings.";
+      else if (name === "OverconstrainedError") friendly = "This device can't use the requested camera settings.";
+
+      setCameraError(friendly);
+      setCameraErrorDetail([name, message].filter(Boolean).join(": ") || null);
+      setIsLoading(false);
+    }
+  }, [stopCamera]);
+
   // Initialize camera
   useEffect(() => {
-    const initCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: "environment",
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          }
-        });
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          streamRef.current = stream;
-        }
-        
-        setHasCamera(true);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Camera error:", error);
-        setCameraError("Unable to access camera. Please grant camera permissions.");
-        setIsLoading(false);
-      }
-    };
-
-    initCamera();
-
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
+    void startCamera();
+    return () => stopCamera();
+  }, [startCamera, stopCamera]);
 
   // Simulate object detection
   const simulateDetection = () => {
@@ -119,8 +173,29 @@ const CameraView = () => {
           <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
             <AlertCircle className="w-8 h-8 text-primary" />
           </div>
-          <p className="text-foreground font-body mb-2">{cameraError}</p>
-          <p className="text-sm text-muted-foreground font-body">
+
+          <p className="text-foreground font-body">{cameraError}</p>
+          {cameraErrorDetail && (
+            <p className="mt-1 text-xs text-muted-foreground font-body">{cameraErrorDetail}</p>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <Button type="button" variant="secondary" onClick={startCamera}>
+              Try again
+            </Button>
+            {isEmbedded && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => window.open(window.location.href, "_blank", "noopener,noreferrer")}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open in new tab
+              </Button>
+            )}
+          </div>
+
+          <p className="mt-4 text-sm text-muted-foreground font-body">
             Tap the scan button to simulate object detection
           </p>
         </div>
