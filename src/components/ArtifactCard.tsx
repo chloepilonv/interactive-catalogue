@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Tag, Hash } from "lucide-react";
+import { X, Calendar, Image as ImageIcon } from "lucide-react";
 import { Artifact } from "@/data/artifacts";
 
 interface ArtifactCardProps {
@@ -10,6 +10,8 @@ interface ArtifactCardProps {
 
 const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
   if (!artifact) return null;
+
+  const hasPhotos = artifact.photos && artifact.photos.length > 0;
 
   return (
     <AnimatePresence>
@@ -48,17 +50,29 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
 
             {/* Content */}
             <div className="overflow-y-auto max-h-[calc(85vh-40px)] px-6 pb-8">
-              {/* Image placeholder area */}
+              {/* Image area */}
               <div className="relative h-48 -mx-6 mb-6 overflow-hidden bg-gradient-vintage">
-                <div className="absolute inset-0 bg-vintage-vignette" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-secondary/50 flex items-center justify-center">
-                      <span className="text-3xl">🎙️</span>
+                {hasPhotos ? (
+                  <img
+                    src={artifact.photos[0]}
+                    alt={artifact.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-secondary/50 flex items-center justify-center">
+                        <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm text-muted-foreground font-body">No image</p>
                     </div>
-                    <p className="text-sm text-muted-foreground font-body">Image Preview</p>
                   </div>
-                </div>
+                )}
+                <div className="absolute inset-0 bg-vintage-vignette" />
                 
                 {/* Gold accent line */}
                 <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-gold" />
@@ -69,22 +83,10 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-2xl md:text-3xl font-display font-semibold text-foreground mb-2"
+                className="text-2xl md:text-3xl font-display font-semibold text-foreground mb-4"
               >
                 {artifact.name}
               </motion.h2>
-
-              {/* French name if available */}
-              {artifact.nameFr && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 }}
-                  className="text-lg font-display italic text-gold mb-4"
-                >
-                  {artifact.nameFr}
-                </motion.p>
-              )}
 
               {/* Meta info */}
               <motion.div
@@ -97,14 +99,10 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
                   <Calendar className="w-4 h-4 text-primary" />
                   {artifact.date}
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-body">
-                  <Tag className="w-4 h-4 text-primary" />
-                  {artifact.category}
-                </span>
-                {artifact.inventoryNumber && (
+                {artifact.photos.length > 1 && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground text-sm font-body">
-                    <Hash className="w-4 h-4 text-primary" />
-                    {artifact.inventoryNumber}
+                    <ImageIcon className="w-4 h-4 text-primary" />
+                    {artifact.photos.length} photos
                   </span>
                 )}
               </motion.div>
@@ -121,16 +119,40 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
                 <h3 className="text-sm font-body font-medium text-muted-foreground uppercase tracking-wider mb-3">
                   Description
                 </h3>
-                <p className="text-base font-body text-foreground/90 leading-relaxed">
+                <p className="text-base font-body text-foreground/90 leading-relaxed whitespace-pre-line">
                   {artifact.description}
                 </p>
               </motion.div>
+
+              {/* Additional photos */}
+              {artifact.photos.length > 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-6"
+                >
+                  <h3 className="text-sm font-body font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                    More Photos
+                  </h3>
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2">
+                    {artifact.photos.slice(1).map((photo, index) => (
+                      <img
+                        key={index}
+                        src={photo}
+                        alt={`${artifact.name} - photo ${index + 2}`}
+                        className="w-24 h-24 rounded-lg object-cover flex-shrink-0 border border-border"
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
               {/* Decorative bottom element */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.35 }}
                 className="mt-8 pt-6 border-t border-border flex items-center justify-center gap-2 text-muted-foreground"
               >
                 <span className="w-8 h-px bg-primary/50" />
