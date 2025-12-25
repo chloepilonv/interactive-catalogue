@@ -233,7 +233,16 @@ export default function Admin() {
         {/* Photo Upload Section */}
         <section className="mb-6">
           <label className="block text-sm font-medium text-muted-foreground mb-2">Photos</label>
-          
+
+          {/* Camera + Upload buttons */}
+          <div className="flex gap-2 mb-3">
+            <CameraCaptureDialog onCapture={uploadPhoto} disabled={uploadingPhotos.length > 0} />
+            <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="w-4 h-4 mr-2" />
+              Upload
+            </Button>
+          </div>
+
           {/* Photo Grid */}
           <div className="grid grid-cols-3 gap-2 mb-3">
             <AnimatePresence>
@@ -254,7 +263,7 @@ export default function Admin() {
                   </button>
                 </motion.div>
               ))}
-              
+
               {uploadingPhotos.map(id => (
                 <motion.div
                   key={id}
@@ -266,15 +275,6 @@ export default function Admin() {
                 </motion.div>
               ))}
             </AnimatePresence>
-            
-            {/* Add Photo Button */}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex flex-col items-center justify-center gap-1 transition-colors"
-            >
-              <Plus className="w-6 h-6 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Add</span>
-            </button>
           </div>
 
           <input
@@ -282,7 +282,6 @@ export default function Admin() {
             type="file"
             accept="image/*"
             multiple
-            capture="environment"
             onChange={handleFileSelect}
             className="hidden"
           />
