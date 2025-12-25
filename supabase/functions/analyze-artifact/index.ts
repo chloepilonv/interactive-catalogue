@@ -18,9 +18,10 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('Analyzing artifact image:', imageUrl);
+    console.log('Analyzing artifact image...');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Step 1: Analyze the artifact image to get name, date, description
+    const analyzeResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -58,26 +59,26 @@ Respond ONLY in valid JSON format like this:
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
+    if (!analyzeResponse.ok) {
+      const errorText = await analyzeResponse.text();
+      console.error('AI gateway error:', analyzeResponse.status, errorText);
       
-      if (response.status === 429) {
+      if (analyzeResponse.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (response.status === 402) {
+      if (analyzeResponse.status === 402) {
         return new Response(JSON.stringify({ error: 'AI credits depleted. Please add funds.' }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      throw new Error(`AI gateway error: ${response.status}`);
+      throw new Error(`AI gateway error: ${analyzeResponse.status}`);
     }
 
-    const data = await response.json();
+    const data = await analyzeResponse.json();
     const content = data.choices?.[0]?.message?.content;
     
     console.log('AI response:', content);
@@ -85,7 +86,6 @@ Respond ONLY in valid JSON format like this:
     // Parse the JSON response from the AI
     let artifactInfo;
     try {
-      // Try to extract JSON from the response (it might be wrapped in markdown)
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         artifactInfo = JSON.parse(jsonMatch[0]);
@@ -99,6 +99,44 @@ Respond ONLY in valid JSON format like this:
         date: 'Unknown date',
         description: content || 'Unable to analyze this artifact.'
       };
+    }
+
+    // Step 2: Generate a beautiful vintage-style image of the artifact
+    console.log('Generating artifact image for:', artifactInfo.name);
+    
+    try {
+      const imageGenResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash-image-preview',
+          messages: [
+            {
+              role: 'user',
+              content: `Generate a beautiful, high-quality vintage museum photograph of a ${artifactInfo.name} from ${artifactInfo.date}. The image should look like a professional museum catalog photo with dramatic lighting, dark background, and elegant composition. Show the artifact in pristine condition as it would appear in a prestigious museum exhibit.`
+            }
+          ],
+          modalities: ['image', 'text']
+        }),
+      });
+
+      if (imageGenResponse.ok) {
+        const imageData = await imageGenResponse.json();
+        const generatedImageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        
+        if (generatedImageUrl) {
+          console.log('Generated image successfully');
+          artifactInfo.imageUrl = generatedImageUrl;
+        }
+      } else {
+        console.log('Image generation failed, using original image');
+      }
+    } catch (imageError) {
+      console.error('Image generation error:', imageError);
+      // Continue without generated image
     }
 
     return new Response(JSON.stringify(artifactInfo), {

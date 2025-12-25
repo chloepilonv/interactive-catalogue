@@ -152,12 +152,15 @@ const CameraView = () => {
 
       if (error) throw error;
 
+      // Use AI-generated image if available, otherwise use captured frame
+      const artifactImage = data.imageUrl || imageDataUrl;
+      
       const detectedArtifact: Artifact = {
         id: `detected-${Date.now()}`,
         name: data.name || "Unknown Artifact",
         date: data.date || "Unknown date",
         description: data.description || "No description available.",
-        photos: [imageDataUrl]
+        photos: [artifactImage]
       };
 
       setDetections([{
@@ -317,54 +320,36 @@ const CameraView = () => {
       {/* Bottom gradient */}
       <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none z-10" />
 
-      {/* Collection info badge */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="absolute top-20 left-4 z-30"
-      >
-        <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-secondary/60 backdrop-blur-md border border-border/40">
-          <span className="text-[10px] font-body text-muted-foreground uppercase tracking-widest">
-            {isLoadingArtifacts ? 'Loading...' : `${artifacts.length} artifacts`}
-          </span>
-          <button
-            onClick={handleRefresh}
-            className="p-1 hover:bg-secondary/80 rounded-full transition-colors"
-            aria-label="Refresh collection"
-          >
-            <RefreshCw className="w-3 h-3 text-muted-foreground" />
-          </button>
-        </div>
-      </motion.div>
 
-      {/* Scan button */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={captureAndAnalyze}
-        disabled={isScanning}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-8 py-4 rounded-full bg-primary/10 border border-primary/40 backdrop-blur-md text-primary font-body font-medium text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed safe-bottom transition-all duration-300 hover:bg-primary/15 hover:border-primary/60"
-      >
-        {isScanning ? (
-          <>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              className="w-4 h-4 border border-primary/40 border-t-primary rounded-full"
-            />
-            <span>Analyzing...</span>
-          </>
-        ) : (
-          <>
-            <Camera className="w-4 h-4" />
-            <span>Scan Object</span>
-          </>
-        )}
-      </motion.button>
+      {/* Scan button - centered container */}
+      <div className="absolute bottom-10 inset-x-0 flex justify-center z-30 safe-bottom">
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={captureAndAnalyze}
+          disabled={isScanning}
+          className="flex items-center gap-3 px-8 py-4 rounded-full bg-primary/10 border border-primary/40 backdrop-blur-md text-primary font-body font-medium text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:bg-primary/15 hover:border-primary/60"
+        >
+          {isScanning ? (
+            <>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                className="w-4 h-4 border border-primary/40 border-t-primary rounded-full"
+              />
+              <span>Analyzing...</span>
+            </>
+          ) : (
+            <>
+              <Camera className="w-4 h-4" />
+              <span>Scan Object</span>
+            </>
+          )}
+        </motion.button>
+      </div>
 
       {/* Instructions hint */}
       <AnimatePresence>
@@ -374,7 +359,7 @@ const CameraView = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.8 }}
-            className="absolute bottom-28 left-1/2 -translate-x-1/2 text-center text-xs text-muted-foreground font-body z-20 max-w-[260px] tracking-wide"
+            className="absolute bottom-28 inset-x-0 text-center text-xs text-muted-foreground font-body z-20 tracking-wide px-4"
           >
             Point your camera at a museum artifact
           </motion.p>
