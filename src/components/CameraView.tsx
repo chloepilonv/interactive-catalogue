@@ -100,22 +100,8 @@ const CameraView = () => {
         });
 
         await videoEl.play();
-
-        // Watchdog: if we never get frames, show a helpful error
-        watchdogRef.current = window.setTimeout(() => {
-          const v = videoRef.current;
-          if (!v) return;
-          if (v.videoWidth > 0) {
-            setIsLoading(false);
-            return;
-          }
-          stopCamera();
-          setCameraError("Camera started but no video feed was received.");
-          setCameraErrorDetail("Try 'Try again' or open in a new tab.");
-        }, 2500);
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     } catch (error: any) {
       console.error("Camera error:", error);
 
@@ -185,17 +171,29 @@ const CameraView = () => {
 
   return (
     <div className="relative w-full h-full bg-charcoal-deep overflow-hidden">
-      {/* Camera feed or fallback */}
-      {isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-dark">
+      {/* Always keep video mounted */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-dark z-20">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full"
           />
         </div>
-      ) : cameraError ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-dark px-6 text-center">
+      )}
+
+      {/* Error overlay */}
+      {!isLoading && cameraError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-dark px-6 text-center z-20">
           <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
             <AlertCircle className="w-8 h-8 text-primary" />
           </div>
@@ -222,19 +220,7 @@ const CameraView = () => {
               Open in new tab
             </Button>
           </div>
-
-          <p className="mt-4 text-sm text-muted-foreground font-body">
-            Tap the scan button to simulate object detection
-          </p>
         </div>
-      ) : (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="absolute inset-0 w-full h-full object-cover"
-        />
       )}
 
       {/* Scanning overlay effect */}
