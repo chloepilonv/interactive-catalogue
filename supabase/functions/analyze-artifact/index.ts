@@ -33,11 +33,11 @@ serve(async (req) => {
       console.error('Database error:', dbError);
     }
 
-    // Create a list of artifact names for the AI prompt
-    const artifactNames = artifacts?.map(a => a.name).join(', ') || '';
+    // Create a list of artifact names for the AI prompt (one per line for reliability)
+    const artifactList = artifacts?.map((a) => `- ${a.name}`).join('\n') || '';
     
     console.log('Analyzing artifact image...');
-    console.log('Known artifacts in database:', artifactNames);
+    console.log('Known artifacts in database:', artifactList || '(none)');
 
     // Step 1: Analyze the artifact image and try to match with database
     const analyzeResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -51,14 +51,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert museum curator and historian specializing in audio and recording technology, especially artifacts from Musée des ondes Emile Berliner.
+             content: `You are an expert museum curator and historian specializing in audio and recording technology, especially artifacts from Musée des ondes Emile Berliner.
 
-IMPORTANT: The museum has these artifacts in their database: ${artifactNames || 'No artifacts registered yet'}
+IMPORTANT: The museum database contains the following artifact names (one per line):
+${artifactList || '- (no artifacts registered yet)'}
 
-When analyzing an artifact image:
-1. Try to identify if it matches any of the known artifacts listed above
-2. If it matches a known artifact, use EXACTLY the same name as in the database
-3. If it's not in the database, provide your best identification
+Matching rules:
+- If the photo matches one of the names above, set "matched": true AND set "name" to EXACTLY that database name (copy/paste).
+- If you are not confident it's exactly one of those, set "matched": false and provide your best identification in "name".
 
 Provide:
 1. Name: The specific name/model of the item (use exact database name if matched)
@@ -129,21 +129,66 @@ Respond ONLY in valid JSON format like this:
       };
     }
 
-    // Step 2: Try to find matching artifact in database
-    let matchedArtifact = null;
-    if (artifacts && artifacts.length > 0) {
-      // First try exact match
-      matchedArtifact = artifacts.find(a => 
-        a.name.toLowerCase() === artifactInfo.name.toLowerCase()
-      );
-      
-      // If no exact match, try partial match
-      if (!matchedArtifact) {
-        matchedArtifact = artifacts.find(a => 
-          a.name.toLowerCase().includes(artifactInfo.name.toLowerCase()) ||
-          artifactInfo.name.toLowerCase().includes(a.name.toLowerCase())
-        );
+    // Step 2: Try to find matching artifact in database (avoid false positives)
+    let matchedArtifact: any | null = null;
+
+    const normalizeName = (value: string) =>
+      value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const STOPWORDS = new Set(["artifact", "artefact", "unknown", "object", "item", "non", "audio"]);
+    const tokenize = (value: string) =>
+      normalizeName(value)
+        .split(" ")
+        .filter(Boolean)
+        .filter((t) => !STOPWORDS.has(t));
+
+    const jaccard = (a: string[], b: string[]) => {
+      if (a.length === 0 || b.length === 0) return 0;
+      const setA = new Set(a);
+      const setB = new Set(b);
+      let intersection = 0;
+      for (const t of setA) if (setB.has(t)) intersection++;
+      const union = new Set([...setA, ...setB]).size;
+      return union === 0 ? 0 : intersection / union;
+    };
+
+    const guessNameRaw = typeof artifactInfo?.name === "string" ? artifactInfo.name : "";
+    const guessName = normalizeName(guessNameRaw);
+
+    if (artifactInfo?.matched === true && artifacts && artifacts.length > 0 && guessName) {
+      let bestScore = 0;
+
+      for (const a of artifacts) {
+        const dbNameRaw = typeof a?.name === "string" ? a.name : "";
+        const dbName = normalizeName(dbNameRaw);
+        if (!dbName) continue;
+
+        let score = 0;
+        if (dbName === guessName) score = 1;
+        else if (dbName.includes(guessName) || guessName.includes(dbName)) score = 0.85;
+        else score = jaccard(tokenize(dbNameRaw), tokenize(guessNameRaw));
+
+        if (score > bestScore) {
+          bestScore = score;
+          matchedArtifact = a;
+        }
       }
+
+      // Require a strong match to prevent returning the wrong registry photo
+      if (bestScore < 0.82) {
+        console.log("No confident database match. Best score:", bestScore, "AI name:", guessNameRaw);
+        matchedArtifact = null;
+      } else {
+        console.log("Database match:", matchedArtifact?.name, "score:", bestScore);
+      }
+    } else {
+      console.log("AI did not confirm a database match (matched=false). Skipping DB photo lookup.");
     }
 
     // If we found a match in database, use database info
