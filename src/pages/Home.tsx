@@ -67,17 +67,6 @@ const Home = () => {
           </Link>
         </motion.div>
 
-        {/* Bottom decorative element */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.6 }}
-          className="absolute bottom-12 flex items-center gap-3 text-muted-foreground/50"
-        >
-          <span className="w-12 h-px bg-border" />
-          <span className="text-xs font-body tracking-[0.3em] uppercase">MOEB</span>
-          <span className="w-12 h-px bg-border" />
-        </motion.div>
       </div>
 
       {/* Hidden SEO content */}
