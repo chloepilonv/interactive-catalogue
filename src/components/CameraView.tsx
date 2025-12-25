@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, AlertCircle, Scan, RefreshCw, ExternalLink } from "lucide-react";
+import { Camera, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import DetectionMarker from "./DetectionMarker";
@@ -80,7 +80,6 @@ const CameraView = () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia(preferredConstraints);
       } catch (e: any) {
-        // Some browsers/devices fail when asking for the environment camera; fallback to any camera.
         if (e?.name === "OverconstrainedError" || e?.name === "NotFoundError") {
           stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         } else {
@@ -92,13 +91,10 @@ const CameraView = () => {
 
       if (videoRef.current) {
         const videoEl = videoRef.current;
-
-        // Set these BEFORE assigning srcObject (matches working console test)
         videoEl.muted = true;
         videoEl.playsInline = true;
         videoEl.srcObject = stream;
 
-        // Wait for loadedmetadata (like the working console script)
         await new Promise<void>((resolve) => {
           videoEl.onloadedmetadata = () => resolve();
         });
@@ -125,13 +121,11 @@ const CameraView = () => {
     }
   }, [stopCamera]);
 
-  // Initialize camera
   useEffect(() => {
     void startCamera();
     return () => stopCamera();
   }, [startCamera, stopCamera]);
 
-  // Capture photo and analyze with AI
   const captureAndAnalyze = async () => {
     const video = videoRef.current;
     if (!video || video.videoWidth === 0) {
@@ -143,7 +137,6 @@ const CameraView = () => {
     setDetections([]);
 
     try {
-      // Capture frame from video
       const canvas = document.createElement("canvas");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -151,17 +144,14 @@ const CameraView = () => {
       if (!ctx) throw new Error("Could not get canvas context");
       ctx.drawImage(video, 0, 0);
       
-      // Convert to base64
       const imageDataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
-      // Call edge function
       const { data, error } = await supabase.functions.invoke("analyze-artifact", {
         body: { imageUrl: imageDataUrl }
       });
 
       if (error) throw error;
 
-      // Create artifact object from AI response
       const detectedArtifact: Artifact = {
         id: `detected-${Date.now()}`,
         name: data.name || "Unknown Artifact",
@@ -170,7 +160,6 @@ const CameraView = () => {
         photos: [imageDataUrl]
       };
 
-      // Place marker in center of screen
       setDetections([{
         id: `detection-${Date.now()}`,
         x: 50,
@@ -207,8 +196,8 @@ const CameraView = () => {
   };
 
   return (
-    <div className="relative w-full h-full bg-charcoal-deep overflow-hidden">
-      {/* Always keep video mounted */}
+    <div className="relative w-full h-full bg-background overflow-hidden">
+      {/* Video element */}
       <video
         ref={videoRef}
         autoPlay
@@ -217,41 +206,48 @@ const CameraView = () => {
         className="absolute inset-0 w-full h-full object-cover"
       />
 
+      {/* Film grain overlay */}
+      <div className="absolute inset-0 texture-grain pointer-events-none z-10" />
+
       {/* Loading overlay */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-dark z-20">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background z-30">
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full"
+            transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+            className="w-10 h-10 border border-primary/40 border-t-primary rounded-full mb-6"
           />
+          <p className="text-muted-foreground font-body text-sm tracking-widest uppercase">
+            Initializing camera...
+          </p>
         </div>
       )}
 
       {/* Error overlay */}
       {!isLoading && cameraError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-dark px-6 text-center z-20">
-          <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-            <AlertCircle className="w-8 h-8 text-primary" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background px-8 text-center z-30">
+          <div className="w-14 h-14 rounded-full border border-border flex items-center justify-center mb-6">
+            <AlertCircle className="w-6 h-6 text-primary" />
           </div>
 
-          <p className="text-foreground font-body">{cameraError}</p>
+          <p className="text-foreground font-body text-sm mb-2">{cameraError}</p>
           {cameraErrorDetail && (
-            <p className="mt-1 text-xs text-muted-foreground font-body">{cameraErrorDetail}</p>
+            <p className="text-xs text-muted-foreground font-body mb-6">{cameraErrorDetail}</p>
           )}
 
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <Button
               type="button"
               onClick={startCamera}
-              className="bg-gradient-gold text-primary-foreground shadow-gold"
+              className="bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 font-body"
             >
               Try again
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => window.open(window.location.href, "_blank", "noopener,noreferrer")}
+              className="text-muted-foreground hover:text-foreground font-body"
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               Open in new tab
@@ -267,29 +263,32 @@ const CameraView = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 pointer-events-none z-10"
+            className="absolute inset-0 pointer-events-none z-20"
           >
+            {/* Scanning line */}
             <motion.div
               initial={{ top: "0%" }}
               animate={{ top: "100%" }}
-              transition={{ duration: 1.5, ease: "linear" }}
-              className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent shadow-gold"
+              transition={{ duration: 2, ease: "linear" }}
+              className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent"
             />
             
-            <div className="absolute inset-8 border-2 border-primary/30 rounded-lg">
-              <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary rounded-tl-lg" />
-              <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary rounded-tr-lg" />
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary rounded-bl-lg" />
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary rounded-br-lg" />
+            {/* Corner brackets */}
+            <div className="absolute inset-12 md:inset-24">
+              <div className="absolute top-0 left-0 w-12 h-12 border-t border-l border-primary/60" />
+              <div className="absolute top-0 right-0 w-12 h-12 border-t border-r border-primary/60" />
+              <div className="absolute bottom-0 left-0 w-12 h-12 border-b border-l border-primary/60" />
+              <div className="absolute bottom-0 right-0 w-12 h-12 border-b border-r border-primary/60" />
             </div>
 
+            {/* Center text */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
               <motion.p
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="text-primary font-body text-sm uppercase tracking-widest"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-primary font-body text-xs uppercase tracking-[0.3em]"
               >
-                Scanning...
+                Analyzing
               </motion.p>
             </div>
           </motion.div>
@@ -310,27 +309,28 @@ const CameraView = () => {
       </AnimatePresence>
 
       {/* Vignette overlay */}
-      <div className="absolute inset-0 bg-vintage-vignette pointer-events-none z-5" />
+      <div className="absolute inset-0 bg-vintage-vignette pointer-events-none z-10" />
 
-      {/* Top gradient for header readability */}
-      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-charcoal-deep/70 to-transparent pointer-events-none" />
+      {/* Top gradient */}
+      <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-background/80 to-transparent pointer-events-none z-10" />
 
-      {/* Bottom gradient for controls */}
-      <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-charcoal-deep/90 to-transparent pointer-events-none" />
+      {/* Bottom gradient */}
+      <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none z-10" />
 
       {/* Collection info badge */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
         className="absolute top-20 left-4 z-30"
       >
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/80 backdrop-blur-sm border border-border/50">
-          <span className="text-xs font-body text-muted-foreground">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-secondary/60 backdrop-blur-md border border-border/40">
+          <span className="text-[10px] font-body text-muted-foreground uppercase tracking-widest">
             {isLoadingArtifacts ? 'Loading...' : `${artifacts.length} artifacts`}
           </span>
           <button
             onClick={handleRefresh}
-            className="p-1 hover:bg-secondary rounded-full transition-colors"
+            className="p-1 hover:bg-secondary/80 rounded-full transition-colors"
             aria-label="Refresh collection"
           >
             <RefreshCw className="w-3 h-3 text-muted-foreground" />
@@ -340,43 +340,43 @@ const CameraView = () => {
 
       {/* Scan button */}
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={captureAndAnalyze}
-        disabled={isScanning || artifacts.length === 0}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-body font-medium shadow-gold disabled:opacity-50 disabled:cursor-not-allowed safe-bottom"
+        disabled={isScanning}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-8 py-4 rounded-full bg-primary/10 border border-primary/40 backdrop-blur-md text-primary font-body font-medium text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed safe-bottom transition-all duration-300 hover:bg-primary/15 hover:border-primary/60"
       >
         {isScanning ? (
           <>
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            >
-              <Scan className="w-5 h-5" />
-            </motion.div>
-            Scanning...
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="w-4 h-4 border border-primary/40 border-t-primary rounded-full"
+            />
+            <span>Analyzing...</span>
           </>
         ) : (
           <>
-            <Camera className="w-5 h-5" />
-            Scan Object
+            <Camera className="w-4 h-4" />
+            <span>Scan Object</span>
           </>
         )}
       </motion.button>
 
       {/* Instructions hint */}
       <AnimatePresence>
-        {!isScanning && detections.length === 0 && (
+        {!isScanning && detections.length === 0 && !isLoading && !cameraError && (
           <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute bottom-24 left-1/2 -translate-x-1/2 text-center text-sm text-foreground/70 font-body z-20 max-w-[280px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: 0.8 }}
+            className="absolute bottom-28 left-1/2 -translate-x-1/2 text-center text-xs text-muted-foreground font-body z-20 max-w-[260px] tracking-wide"
           >
-            {artifacts.length === 0 
-              ? "No artifacts in collection. Add items to your Google Sheet."
-              : "Point camera at a museum object and tap Scan"
-            }
+            Point your camera at a museum artifact
           </motion.p>
         )}
       </AnimatePresence>
