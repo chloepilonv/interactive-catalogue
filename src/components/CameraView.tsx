@@ -32,11 +32,17 @@ const CameraView = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const watchdogRef = useRef<number | null>(null);
 
   // Fetch artifacts from Google Sheets
   const { data: artifacts = [], isLoading: isLoadingArtifacts, refetch } = useArtifacts();
 
   const stopCamera = useCallback(() => {
+    if (watchdogRef.current) {
+      window.clearTimeout(watchdogRef.current);
+      watchdogRef.current = null;
+    }
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -71,7 +77,7 @@ const CameraView = () => {
         stream = await navigator.mediaDevices.getUserMedia(preferredConstraints);
       } catch (e: any) {
         // Some browsers/devices fail when asking for the environment camera; fallback to any camera.
-        if (e?.name === "OverconstrainedError") {
+        if (e?.name === "OverconstrainedError" || e?.name === "NotFoundError") {
           stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         } else {
           throw e;
@@ -81,12 +87,32 @@ const CameraView = () => {
       streamRef.current = stream;
 
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+        const videoEl = videoRef.current;
+        videoEl.srcObject = stream;
+
+        // Ensure playback starts reliably across browsers
+        await new Promise<void>((resolve) => {
+          const done = () => resolve();
+          videoEl.onloadedmetadata = done;
+          videoEl.oncanplay = done;
+          window.setTimeout(done, 1200);
+        });
+
         try {
-          await videoRef.current.play();
+          await videoEl.play();
         } catch {
-          // ignore play() errors; autoPlay/playsInline should handle most cases
+          // ignore play() errors; some browsers require a user gesture
         }
+
+        // Watchdog: if we never get frames, show a helpful error (prevents silent black screen)
+        watchdogRef.current = window.setTimeout(() => {
+          const v = videoRef.current;
+          if (!v) return;
+          if (v.videoWidth > 0) return;
+          stopCamera();
+          setCameraError("Camera started but no video feed was received.");
+          setCameraErrorDetail("Try 'Try again' or open in a new tab.");
+        }, 2500);
       }
 
       setIsLoading(false);
@@ -180,19 +206,21 @@ const CameraView = () => {
           )}
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-            <Button type="button" variant="secondary" onClick={startCamera}>
+            <Button
+              type="button"
+              onClick={startCamera}
+              className="bg-gradient-gold text-primary-foreground shadow-gold"
+            >
               Try again
             </Button>
-            {isEmbedded && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => window.open(window.location.href, "_blank", "noopener,noreferrer")}
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Open in new tab
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => window.open(window.location.href, "_blank", "noopener,noreferrer")}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Open in new tab
+            </Button>
           </div>
 
           <p className="mt-4 text-sm text-muted-foreground font-body">

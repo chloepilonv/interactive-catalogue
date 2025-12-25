@@ -16,14 +16,20 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <motion.div
+          key="artifact-card-shell"
+          className="fixed inset-0 z-40"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 1 }}
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-charcoal-deep/80 backdrop-blur-sm z-40"
+            className="absolute inset-0 bg-charcoal-deep/80 backdrop-blur-sm"
           />
 
           {/* Card */}
@@ -32,7 +38,7 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-card border-t border-x border-border shadow-card safe-bottom"
+            className="absolute inset-x-0 bottom-0 z-10 max-h-[85vh] overflow-hidden rounded-t-3xl bg-gradient-card border-t border-x border-border shadow-card safe-bottom"
           >
             {/* Handle bar */}
             <div className="flex justify-center pt-3 pb-2">
@@ -59,7 +65,7 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       // Fallback if image fails to load
-                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
                 ) : (
@@ -73,7 +79,7 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-vintage-vignette" />
-                
+
                 {/* Gold accent line */}
                 <div className="absolute bottom-0 inset-x-0 h-1 bg-gradient-gold" />
               </div>
@@ -161,7 +167,7 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
               </motion.div>
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );
