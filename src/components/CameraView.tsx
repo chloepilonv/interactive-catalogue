@@ -152,15 +152,17 @@ const CameraView = () => {
 
       if (error) throw error;
 
-      // Use AI-generated image if available, otherwise use captured frame
-      const artifactImage = data.imageUrl || imageDataUrl;
+      // Use database photo if found, otherwise use captured frame
+      const artifactPhotos = data.photos?.length > 0 
+        ? data.photos 
+        : (data.imageUrl ? [data.imageUrl] : [imageDataUrl]);
       
       const detectedArtifact: Artifact = {
-        id: `detected-${Date.now()}`,
+        id: data.id || `detected-${Date.now()}`,
         name: data.name || "Unknown Artifact",
         date: data.date || "Unknown date",
         description: data.description || "No description available.",
-        photos: [artifactImage]
+        photos: artifactPhotos
       };
 
       setDetections([{
@@ -170,7 +172,10 @@ const CameraView = () => {
         artifact: detectedArtifact
       }]);
 
-      toast({ title: "Object identified!", description: detectedArtifact.name });
+      const toastMessage = data.fromDatabase 
+        ? `Found in collection: ${detectedArtifact.name}` 
+        : detectedArtifact.name;
+      toast({ title: "Object identified!", description: toastMessage });
     } catch (err: any) {
       console.error("Analysis error:", err);
       toast({
