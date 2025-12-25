@@ -2,9 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, AlertCircle, Scan, RefreshCw, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import DetectionMarker from "./DetectionMarker";
 import ArtifactCard from "./ArtifactCard";
 import { useArtifacts, Artifact } from "@/hooks/useArtifacts";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Detection {
   id: string;
@@ -34,7 +36,9 @@ const CameraView = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const watchdogRef = useRef<number | null>(null);
 
-  // Fetch artifacts from Google Sheets
+  const { toast } = useToast();
+
+  // Fetch artifacts from database
   const { data: artifacts = [], isLoading: isLoadingArtifacts, refetch } = useArtifacts();
 
   const stopCamera = useCallback(() => {
@@ -127,31 +131,64 @@ const CameraView = () => {
     return () => stopCamera();
   }, [startCamera, stopCamera]);
 
-  // Simulate object detection
-  const simulateDetection = () => {
-    if (artifacts.length === 0) return;
-    
+  // Capture photo and analyze with AI
+  const captureAndAnalyze = async () => {
+    const video = videoRef.current;
+    if (!video || video.videoWidth === 0) {
+      toast({ title: "Camera not ready", description: "Please wait for the camera to initialize.", variant: "destructive" });
+      return;
+    }
+
     setIsScanning(true);
     setDetections([]);
 
-    setTimeout(() => {
-      // Generate 1-3 random detections from available artifacts
-      const numDetections = Math.min(Math.floor(Math.random() * 3) + 1, artifacts.length);
-      const shuffled = [...artifacts].sort(() => Math.random() - 0.5);
-      const newDetections: Detection[] = [];
+    try {
+      // Capture frame from video
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get canvas context");
+      ctx.drawImage(video, 0, 0);
+      
+      // Convert to base64
+      const imageDataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
-      for (let i = 0; i < numDetections; i++) {
-        newDetections.push({
-          id: `detection-${Date.now()}-${i}`,
-          x: 20 + Math.random() * 60,
-          y: 20 + Math.random() * 60,
-          artifact: shuffled[i]
-        });
-      }
+      // Call edge function
+      const { data, error } = await supabase.functions.invoke("analyze-artifact", {
+        body: { imageUrl: imageDataUrl }
+      });
 
-      setDetections(newDetections);
+      if (error) throw error;
+
+      // Create artifact object from AI response
+      const detectedArtifact: Artifact = {
+        id: `detected-${Date.now()}`,
+        name: data.name || "Unknown Artifact",
+        date: data.date || "Unknown date",
+        description: data.description || "No description available.",
+        photos: [imageDataUrl]
+      };
+
+      // Place marker in center of screen
+      setDetections([{
+        id: `detection-${Date.now()}`,
+        x: 50,
+        y: 50,
+        artifact: detectedArtifact
+      }]);
+
+      toast({ title: "Object identified!", description: detectedArtifact.name });
+    } catch (err: any) {
+      console.error("Analysis error:", err);
+      toast({
+        title: "Analysis failed",
+        description: err?.message || "Could not analyze the image. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
       setIsScanning(false);
-    }, 1500);
+    }
   };
 
   const handleMarkerClick = (artifact: Artifact) => {
@@ -305,7 +342,7 @@ const CameraView = () => {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={simulateDetection}
+        onClick={captureAndAnalyze}
         disabled={isScanning || artifacts.length === 0}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-body font-medium shadow-gold disabled:opacity-50 disabled:cursor-not-allowed safe-bottom"
       >
