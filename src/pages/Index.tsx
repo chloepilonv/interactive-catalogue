@@ -1,13 +1,31 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect } from "react";
+import Header from "@/components/Header";
+import CameraView from "@/components/CameraView";
 
 const Index = () => {
+  // Lock to portrait mode hint for mobile
+  useEffect(() => {
+    // Prevent zoom on double tap
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+    
+    return () => {
+      document.removeEventListener('gesturestart', (e) => e.preventDefault());
+    };
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <main className="relative h-[100dvh] w-full overflow-hidden bg-charcoal-deep">
+      {/* Header overlay */}
+      <Header />
+
+      {/* Camera view takes full screen */}
+      <CameraView />
+
+      {/* App info - hidden but good for SEO */}
+      <h1 className="sr-only">
+        Musée des Ondes Emile Berliner - Interactive Collection Viewer
+      </h1>
+    </main>
   );
 };
 
