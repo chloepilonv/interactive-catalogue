@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Scan from "./pages/Scan";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminDatabase from "./pages/AdminDatabase";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/add" element={<Admin />} />
+          <Route path="/admin/database" element={<AdminDatabase />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
