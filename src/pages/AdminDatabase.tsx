@@ -448,7 +448,7 @@ export default function AdminDatabase() {
                   <TableHead className="hidden sm:table-cell">Date</TableHead>
                   <TableHead className="hidden md:table-cell">№ Catalogue</TableHead>
                   <TableHead className="hidden lg:table-cell">Description</TableHead>
-                  <TableHead className="hidden xl:table-cell">Don</TableHead>
+                  <TableHead className="hidden lg:table-cell">Don</TableHead>
                   <TableHead className="w-24">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -480,7 +480,7 @@ export default function AdminDatabase() {
                     <TableCell className="hidden lg:table-cell text-muted-foreground max-w-[250px] truncate">
                       {artifact.description || '—'}
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell text-muted-foreground max-w-[200px] truncate">
+                    <TableCell className="hidden lg:table-cell text-muted-foreground max-w-[200px] truncate">
                       {artifact.donation || '—'}
                     </TableCell>
                     <TableCell>
