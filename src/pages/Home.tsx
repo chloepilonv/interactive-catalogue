@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Scan } from "lucide-react";
-import museumLogo from "@/assets/museum-logo-white.png";
+import museumLogo from "@/assets/museum-logo-white-new.png";
+import MeshGradientBackground from "@/components/MeshGradientBackground";
 
 const Home = () => {
   return (
     <main className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-background relative overflow-hidden">
-      {/* Subtle spotlight effect */}
-      <div className="absolute inset-0 bg-spotlight pointer-events-none" />
+      {/* Mesh gradient background effect */}
+      <MeshGradientBackground />
       
       {/* Film grain texture */}
       <div className="absolute inset-0 texture-grain pointer-events-none" />
@@ -28,7 +29,7 @@ const Home = () => {
           <img
             src={museumLogo}
             alt="Musée des Ondes Emile Berliner"
-            className="w-auto h-12 md:h-16 object-contain"
+            className="w-auto h-20 md:h-28 object-contain"
           />
         </motion.div>
 
