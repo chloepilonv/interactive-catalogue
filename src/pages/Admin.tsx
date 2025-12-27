@@ -14,6 +14,8 @@ interface ArtifactForm {
   date: string;
   description: string;
   photos: string[];
+  catalog_number: string;
+  donation: string;
 }
 
 export default function Admin() {
@@ -27,6 +29,8 @@ export default function Admin() {
     date: '',
     description: '',
     photos: [],
+    catalog_number: '',
+    donation: '',
   });
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,12 +198,14 @@ export default function Admin() {
         date: form.date || 'Date inconnue',
         description: form.description || 'Aucune description disponible.',
         photos: form.photos,
+        catalog_number: form.catalog_number || null,
+        donation: form.donation || null,
       });
 
       if (error) throw error;
 
       toast.success('Artefact enregistré avec succès !');
-      setForm({ name: '', date: '', description: '', photos: [] });
+      setForm({ name: '', date: '', description: '', photos: [], catalog_number: '', donation: '' });
     } catch (error) {
       console.error('Save error:', error);
       toast.error("Échec de l'enregistrement de l'artefact");
@@ -223,8 +229,9 @@ export default function Admin() {
             Retour
           </Button>
           <h1 className="font-display text-lg font-semibold text-foreground">Ajouter un artefact</h1>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="w-4 h-4" />
+          <Button variant="ghost" size="sm" onClick={handleLogout} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+            <LogOut className="w-4 h-4 mr-2" />
+            Déconnexion
           </Button>
         </div>
       </header>
@@ -336,6 +343,24 @@ export default function Admin() {
               onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Décrivez l'artefact, son histoire et son importance..."
               rows={4}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Numéro de catalogue</label>
+            <Input
+              value={form.catalog_number}
+              onChange={(e) => setForm(prev => ({ ...prev, catalog_number: e.target.value }))}
+              placeholder="ex. CAT-001"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-1">Don</label>
+            <Input
+              value={form.donation}
+              onChange={(e) => setForm(prev => ({ ...prev, donation: e.target.value }))}
+              placeholder="ex. Collection privée, Don de M. Dupont..."
             />
           </div>
         </section>

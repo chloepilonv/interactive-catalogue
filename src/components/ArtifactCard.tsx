@@ -106,6 +106,16 @@ const ArtifactCard = ({ artifact, isOpen, onClose }: ArtifactCardProps) => {
                   <Calendar className="w-3.5 h-3.5 text-primary" />
                   {artifact.date}
                 </span>
+                {artifact.catalog_number && (
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border text-muted-foreground text-xs font-body tracking-wide">
+                    Cat. {artifact.catalog_number}
+                  </span>
+                )}
+                {artifact.donation && (
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border text-muted-foreground text-xs font-body tracking-wide">
+                    Don: {artifact.donation}
+                  </span>
+                )}
                 {artifact.photos.length > 1 && (
                   <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border text-muted-foreground text-xs font-body tracking-wide">
                     <ImageIcon className="w-3.5 h-3.5 text-primary" />
