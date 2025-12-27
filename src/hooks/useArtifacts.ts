@@ -20,6 +20,8 @@ async function fetchArtifactsFromDB(): Promise<Artifact[]> {
     date: row.date || 'Unknown date',
     description: row.description || 'No description available.',
     photos: row.photos || [],
+    catalog_number: row.catalog_number || undefined,
+    donation: row.donation || undefined,
   }));
 }
 

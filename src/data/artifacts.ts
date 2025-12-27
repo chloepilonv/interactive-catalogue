@@ -4,6 +4,8 @@ export interface Artifact {
   date: string;
   description: string;
   photos: string[];
+  catalog_number?: string;
+  donation?: string;
 }
 
 // Parse CSV text into array of artifacts

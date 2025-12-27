@@ -16,27 +16,33 @@ export type Database = {
     Tables: {
       artifacts: {
         Row: {
+          catalog_number: string | null
           created_at: string
           date: string | null
           description: string | null
+          donation: string | null
           id: string
           name: string
           photos: string[] | null
           updated_at: string
         }
         Insert: {
+          catalog_number?: string | null
           created_at?: string
           date?: string | null
           description?: string | null
+          donation?: string | null
           id?: string
           name?: string
           photos?: string[] | null
           updated_at?: string
         }
         Update: {
+          catalog_number?: string | null
           created_at?: string
           date?: string | null
           description?: string | null
+          donation?: string | null
           id?: string
           name?: string
           photos?: string[] | null
