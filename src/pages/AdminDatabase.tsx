@@ -19,6 +19,7 @@ import {
   LayoutGrid,
   List,
   Plus,
+  Search,
 } from 'lucide-react';
 import {
   Dialog,
@@ -86,6 +87,7 @@ export default function AdminDatabase() {
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Dialog states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -348,6 +350,19 @@ export default function AdminDatabase() {
     }
   };
 
+  // Filter artifacts based on search query
+  const filteredArtifacts = artifacts.filter((artifact) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      artifact.name.toLowerCase().includes(query) ||
+      (artifact.description?.toLowerCase().includes(query)) ||
+      (artifact.catalog_number?.toLowerCase().includes(query)) ||
+      (artifact.donation?.toLowerCase().includes(query)) ||
+      (artifact.date?.toLowerCase().includes(query))
+    );
+  });
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -394,17 +409,33 @@ export default function AdminDatabase() {
       </header>
 
       <main className="container mx-auto px-4 py-6">
+        {/* Search Bar */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Rechercher un artefact..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        ) : artifacts.length === 0 ? (
+        ) : filteredArtifacts.length === 0 ? (
           <div className="text-center py-12">
             <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Aucun artefact enregistré</p>
-            <Button onClick={() => navigate('/admin/add')} variant="outline" className="mt-4">
-              Ajouter le premier artefact
-            </Button>
+            <p className="text-muted-foreground">
+              {searchQuery ? 'Aucun résultat trouvé' : 'Aucun artefact enregistré'}
+            </p>
+            {!searchQuery && (
+              <Button onClick={openCreateForm} variant="outline" className="mt-4">
+                Ajouter le premier artefact
+              </Button>
+            )}
           </div>
         ) : viewMode === 'table' ? (
           /* Table View */
@@ -422,7 +453,7 @@ export default function AdminDatabase() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {artifacts.map((artifact) => (
+                {filteredArtifacts.map((artifact) => (
                   <TableRow key={artifact.id}>
                     <TableCell>
                       <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted">
@@ -475,7 +506,7 @@ export default function AdminDatabase() {
         ) : (
           /* Gallery View */
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {artifacts.map((artifact) => (
+            {filteredArtifacts.map((artifact) => (
               <motion.div
                 key={artifact.id}
                 initial={{ opacity: 0, y: 10 }}
