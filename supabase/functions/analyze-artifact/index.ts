@@ -51,6 +51,7 @@ serve(async (req) => {
         text: `You are analyzing a museum artifact photo. Compare it VISUALLY against the reference photos provided below.
 
 IMPORTANT: This is a VISUAL COMPARISON task. Look at the actual images, not just names.
+IMPORTANT: You MUST respond entirely in FRENCH. All text including the description MUST be in French.
 
 Known museum artifacts with reference photos:
 ${artifactListWithPhotos || '(no artifacts registered yet)'}
@@ -60,9 +61,10 @@ INSTRUCTIONS:
 2. Compare it visually against the reference photos listed above
 3. If you find a VISUAL MATCH with one of the reference photos, set "matched": true and use the EXACT artifact name
 4. If no visual match is found, set "matched": false and provide your best identification
+5. The "description" field MUST be written in French
 
 Respond ONLY in valid JSON:
-{"name": "...", "date": "...", "description": "...", "matched": true/false, "confidence": "high/medium/low", "matchReason": "brief explanation of why this matched or didn't match"}`
+{"name": "...", "date": "...", "description": "Description détaillée en français...", "matched": true/false, "confidence": "high/medium/low", "matchReason": "explication brève en français"}`
       },
       {
         type: 'text',
