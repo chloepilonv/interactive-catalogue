@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   LayoutGrid,
   List,
+  Plus,
 } from 'lucide-react';
 import {
   Dialog,
@@ -280,6 +281,12 @@ export default function AdminDatabase() {
     }
   };
 
+  const openCreateForm = () => {
+    setEditingArtifact(null);
+    setForm(emptyForm);
+    setIsFormOpen(true);
+  };
+
   const saveArtifact = async () => {
     if (!form.name.trim()) {
       toast.error("Veuillez entrer un nom pour l'artefact");
@@ -303,6 +310,12 @@ export default function AdminDatabase() {
           .eq('id', editingArtifact.id);
         if (error) throw error;
         toast.success('Artefact mis à jour !');
+      } else {
+        const { error } = await supabase
+          .from('artifacts')
+          .insert(artifactData);
+        if (error) throw error;
+        toast.success('Artefact créé !');
       }
 
       setIsFormOpen(false);
@@ -354,6 +367,14 @@ export default function AdminDatabase() {
           </Button>
           <h1 className="font-display text-lg font-semibold text-foreground">Database</h1>
           <div className="flex items-center gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={openCreateForm}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Ajouter
+            </Button>
             <Button
               variant={viewMode === 'table' ? 'secondary' : 'ghost'}
               size="sm"
@@ -500,11 +521,11 @@ export default function AdminDatabase() {
         )}
       </main>
 
-      {/* Edit Dialog */}
+      {/* Add/Edit Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Modifier l'artefact</DialogTitle>
+            <DialogTitle>{editingArtifact ? "Modifier l'artefact" : "Ajouter un artefact"}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
