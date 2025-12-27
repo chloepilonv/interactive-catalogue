@@ -38,7 +38,7 @@ const Home = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="text-muted-foreground font-body text-sm md:text-base tracking-widest uppercase mb-12 text-center"
+          className="text-muted-foreground font-sans italic text-base md:text-lg tracking-normal mb-12 text-center"
         >
           Expérience interactive de la collection
         </motion.p>
