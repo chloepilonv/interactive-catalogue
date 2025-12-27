@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Settings } from "lucide-react";
 import { Link } from "react-router-dom";
-import museumLogo from "@/assets/museum-logo-white.png";
+import museumLogo from "@/assets/museum-logo-white-new.png";
 
 const Header = () => {
   return (
@@ -17,7 +17,7 @@ const Header = () => {
           <img
             src={museumLogo}
             alt="Musée des Ondes Emile Berliner"
-            className="h-6 w-auto opacity-90"
+            className="h-10 w-auto opacity-90"
           />
         </Link>
 
