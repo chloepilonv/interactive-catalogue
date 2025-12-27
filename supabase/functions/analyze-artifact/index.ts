@@ -33,13 +33,76 @@ serve(async (req) => {
       console.error('Database error:', dbError);
     }
 
-    // Create a list of artifact names for the AI prompt (one per line for reliability)
-    const artifactList = artifacts?.map((a) => `- ${a.name}`).join('\n') || '';
+    // Create a list of artifacts with their reference photos for visual comparison
+    const artifactListWithPhotos = artifacts?.map((a) => {
+      const photoUrls = a.photos?.length > 0 
+        ? a.photos.slice(0, 3).join(', ')  // Limit to 3 photos per artifact
+        : '(no reference photos)';
+      return `- "${a.name}" | Reference photos: ${photoUrls}`;
+    }).join('\n') || '';
     
-    console.log('Analyzing artifact image...');
-    console.log('Known artifacts in database:', artifactList || '(none)');
+    console.log('Analyzing artifact image with visual comparison...');
+    console.log('Known artifacts with photos:', artifacts?.length || 0);
 
-    // Step 1: Analyze the artifact image and try to match with database
+    // Build the content array with scanned image + reference photos for visual comparison
+    const messageContent: any[] = [
+      {
+        type: 'text',
+        text: `You are analyzing a museum artifact photo. Compare it VISUALLY against the reference photos provided below.
+
+IMPORTANT: This is a VISUAL COMPARISON task. Look at the actual images, not just names.
+
+Known museum artifacts with reference photos:
+${artifactListWithPhotos || '(no artifacts registered yet)'}
+
+INSTRUCTIONS:
+1. Examine the scanned image carefully
+2. Compare it visually against the reference photos listed above
+3. If you find a VISUAL MATCH with one of the reference photos, set "matched": true and use the EXACT artifact name
+4. If no visual match is found, set "matched": false and provide your best identification
+
+Respond ONLY in valid JSON:
+{"name": "...", "date": "...", "description": "...", "matched": true/false, "confidence": "high/medium/low", "matchReason": "brief explanation of why this matched or didn't match"}`
+      },
+      {
+        type: 'text',
+        text: 'SCANNED IMAGE TO IDENTIFY:'
+      },
+      {
+        type: 'image_url',
+        image_url: { url: imageUrl }
+      }
+    ];
+
+    // Add reference photos from database artifacts for direct visual comparison
+    if (artifacts && artifacts.length > 0) {
+      messageContent.push({
+        type: 'text',
+        text: '\n\nREFERENCE PHOTOS FROM DATABASE (compare the scanned image against these):'
+      });
+
+      for (const artifact of artifacts) {
+        if (artifact.photos && artifact.photos.length > 0) {
+          // Add label for this artifact's photos
+          messageContent.push({
+            type: 'text',
+            text: `\n--- ${artifact.name} ---`
+          });
+          
+          // Add up to 2 reference photos per artifact to avoid token limits
+          for (const photoUrl of artifact.photos.slice(0, 2)) {
+            if (photoUrl && typeof photoUrl === 'string') {
+              messageContent.push({
+                type: 'image_url',
+                image_url: { url: photoUrl }
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Step 1: Analyze with visual comparison
     const analyzeResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -50,37 +113,8 @@ serve(async (req) => {
         model: 'google/gemini-2.5-flash',
         messages: [
           {
-            role: 'system',
-             content: `You are an expert museum curator and historian specializing in audio and recording technology, especially artifacts from Musée des ondes Emile Berliner.
-
-IMPORTANT: The museum database contains the following artifact names (one per line):
-${artifactList || '- (no artifacts registered yet)'}
-
-Matching rules:
-- If the photo matches one of the names above, set "matched": true AND set "name" to EXACTLY that database name (copy/paste).
-- If you are not confident it's exactly one of those, set "matched": false and provide your best identification in "name".
-
-Provide:
-1. Name: The specific name/model of the item (use exact database name if matched)
-2. Date: The approximate year or date range 
-3. Description: A 2-3 sentence description
-4. matched: true if this matches a known database artifact, false otherwise
-
-Respond ONLY in valid JSON format like this:
-{"name": "...", "date": "...", "description": "...", "matched": true/false}`
-          },
-          {
             role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Please analyze this museum artifact and identify it. If it matches any known artifact in the database, use the exact name.'
-              },
-              {
-                type: 'image_url',
-                image_url: { url: imageUrl }
-              }
-            ]
+            content: messageContent
           }
         ],
       }),
