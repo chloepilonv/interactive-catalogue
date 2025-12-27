@@ -202,6 +202,36 @@
     animation: float 4s ease-in-out infinite;
   }
 
+  @keyframes float-slow {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(30px, -20px); }
+    50% { transform: translate(-20px, 15px); }
+    75% { transform: translate(15px, 25px); }
+  }
+
+  @keyframes float-medium {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(-25px, 20px); }
+    66% { transform: translate(20px, -15px); }
+  }
+
+  @keyframes float-fast {
+    0%, 100% { transform: translate(-50%, 0); }
+    50% { transform: translate(-50%, -30px); }
+  }
+
+  .animate-float-slow {
+    animation: float-slow 20s ease-in-out infinite;
+  }
+
+  .animate-float-medium {
+    animation: float-medium 15s ease-in-out infinite;
+  }
+
+  .animate-float-fast {
+    animation: float-fast 10s ease-in-out infinite;
+  }
+
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
