@@ -1,3 +1,6 @@
+import { Canvas } from "@react-three/fiber";
+import { ShaderPlane, EnergyRing } from "@/components/ui/background-paper-shaders";
+
 interface MeshGradientBackgroundProps {
   className?: string;
 }
@@ -5,37 +8,28 @@ interface MeshGradientBackgroundProps {
 const MeshGradientBackground = ({ className = "" }: MeshGradientBackgroundProps) => {
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>
-      {/* Animated gradient orbs */}
-      <div className="absolute inset-0">
-        <div 
-          className="absolute w-[600px] h-[600px] rounded-full opacity-30 blur-[120px] animate-float-slow"
-          style={{
-            background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)",
-            top: "-20%",
-            left: "-10%",
-          }}
-        />
-        <div 
-          className="absolute w-[500px] h-[500px] rounded-full opacity-20 blur-[100px] animate-float-medium"
-          style={{
-            background: "radial-gradient(circle, hsl(220 60% 30%) 0%, transparent 70%)",
-            bottom: "-15%",
-            right: "-10%",
-          }}
-        />
-        <div 
-          className="absolute w-[400px] h-[400px] rounded-full opacity-25 blur-[80px] animate-float-fast"
-          style={{
-            background: "radial-gradient(circle, hsl(280 50% 25%) 0%, transparent 70%)",
-            top: "40%",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
-        />
-      </div>
+      {/* Three.js Canvas for shader effects */}
+      <Canvas
+        camera={{ position: [0, 0, 3], fov: 75 }}
+        style={{ position: "absolute", inset: 0 }}
+        gl={{ alpha: true, antialias: true }}
+      >
+        {/* Ambient lighting */}
+        <ambientLight intensity={0.5} />
+        
+        {/* Shader planes with museum-themed colors */}
+        <ShaderPlane position={[-1.5, 1, -2]} color1="#1a1614" color2="#c4a052" />
+        <ShaderPlane position={[1.5, -0.5, -2.5]} color1="#2a2420" color2="#d4b062" />
+        <ShaderPlane position={[0, 0.5, -3]} color1="#0f0d0c" color2="#b49042" />
+        
+        {/* Energy rings for visual interest */}
+        <EnergyRing radius={1.5} position={[-1, 0.5, -1.5]} />
+        <EnergyRing radius={1} position={[1.2, -0.3, -2]} />
+        <EnergyRing radius={0.8} position={[0, -0.8, -1]} />
+      </Canvas>
       
       {/* Dark overlay for text readability */}
-      <div className="absolute inset-0 bg-background/70" />
+      <div className="absolute inset-0 bg-background/80" />
     </div>
   );
 };
