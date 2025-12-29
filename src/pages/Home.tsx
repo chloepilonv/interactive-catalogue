@@ -28,7 +28,7 @@ const Home = () => {
         >
           <img
             src={museumLogo}
-            alt="Musée des Ondes Emile Berliner"
+            alt="Espace Berliner"
             className="w-auto h-20 md:h-28 object-contain"
           />
         </motion.div>
@@ -72,7 +72,7 @@ const Home = () => {
 
       {/* Hidden SEO content */}
       <h1 className="sr-only">
-        Musée des Ondes Emile Berliner - Visualiseur interactif de la collection
+        Espace Berliner - Visualiseur interactif de la collection
       </h1>
     </main>
   );

@@ -16,7 +16,7 @@ const Header = () => {
         <Link to="/" className="flex items-center">
           <img
             src={museumLogo}
-            alt="Musée des Ondes Emile Berliner"
+            alt="Espace Berliner"
             className="h-10 w-auto opacity-90"
           />
         </Link>
