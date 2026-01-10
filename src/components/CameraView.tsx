@@ -210,7 +210,7 @@ const CameraView = () => {
         autoPlay
         playsInline
         muted
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-contain bg-black"
       />
 
       {/* Film grain overlay */}
