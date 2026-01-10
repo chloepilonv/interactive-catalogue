@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import { Info } from "lucide-react";
+import { Eye } from "lucide-react";
 
 interface DetectionMarkerProps {
   x: number;
@@ -14,37 +14,31 @@ const DetectionMarker = forwardRef<HTMLButtonElement, DetectionMarkerProps>(
     return (
       <motion.button
         ref={ref}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0, opacity: 0 }}
+        initial={{ scale: 0.8, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.8, opacity: 0, y: 20 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         onClick={onClick}
-        className="absolute z-30 group"
-        style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}
+        className="absolute z-30 left-1/2 -translate-x-1/2"
+        style={{ top: `${y}%` }}
         aria-label={`View details for ${artifactName}`}
       >
-        {/* Outer pulse ring */}
-        <span className="absolute inset-0 rounded-full animate-pulse-gold" />
-
-        {/* Glow effect */}
-        <span className="absolute -inset-4 rounded-full bg-gradient-radial from-primary/20 to-transparent blur-lg" />
-
-        {/* Main button */}
+        {/* Pulsing background glow */}
         <motion.span
-          whileHover={{ scale: 1.1 }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -inset-2 rounded-full bg-primary/30 blur-md"
+        />
+
+        {/* Main CTA button */}
+        <motion.span
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="relative flex items-center justify-center w-14 h-14 rounded-full bg-primary/20 backdrop-blur-md border border-primary/50 shadow-gold"
+          className="relative flex items-center gap-3 px-6 py-3 rounded-full bg-primary text-primary-foreground font-body font-medium text-sm tracking-wide shadow-lg border border-primary/50"
         >
-          <Info className="w-5 h-5 text-primary" />
-        </motion.span>
-
-        {/* Tooltip on hover */}
-        <motion.span
-          initial={{ opacity: 0, y: 8 }}
-          whileHover={{ opacity: 1, y: 0 }}
-          className="absolute top-full mt-3 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-card/95 backdrop-blur-md border border-border text-xs font-body text-foreground whitespace-nowrap shadow-card tracking-wide"
-        >
-          {artifactName}
+          <Eye className="w-4 h-4" />
+          <span className="max-w-[200px] truncate">{artifactName}</span>
+          <span className="text-primary-foreground/70">→</span>
         </motion.span>
       </motion.button>
     );
