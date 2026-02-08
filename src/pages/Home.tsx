@@ -18,18 +18,18 @@ const Home = () => {
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-32 bg-gradient-to-t from-transparent via-primary/20 to-transparent" />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center px-8">
+      <div className="relative z-10 flex flex-col items-center w-full max-w-4xl px-8">
         {/* Museum Logo */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-16 flex justify-center w-full"
+          className="mb-16 w-full"
         >
           <img
             src={museumLogo}
             alt="Espace Berliner"
-            className="w-auto h-20 md:h-28 object-contain mx-auto"
+            className="h-20 md:h-28 object-contain mx-auto"
           />
         </motion.div>
 
