@@ -24,13 +24,16 @@ const Home = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-16 w-full"
+          className="mb-16 w-full flex justify-center"
         >
-          <img
-            src={museumLogo}
-            alt="Espace Berliner"
-            className="h-20 md:h-28 object-contain mx-auto"
-          />
+          {/* The logo PNG has asymmetric padding - offset to visually center the text */}
+          <div className="relative" style={{ marginLeft: '-2.5rem' }}>
+            <img
+              src={museumLogo}
+              alt="Espace Berliner"
+              className="h-20 md:h-28 object-contain"
+            />
+          </div>
         </motion.div>
 
         {/* Tagline */}
