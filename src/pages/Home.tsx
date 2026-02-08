@@ -24,12 +24,12 @@ const Home = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-16"
+          className="mb-16 flex justify-center w-full"
         >
           <img
             src={museumLogo}
             alt="Espace Berliner"
-            className="w-auto h-20 md:h-28 object-contain"
+            className="w-auto h-20 md:h-28 object-contain mx-auto"
           />
         </motion.div>
 
